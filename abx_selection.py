@@ -1,6 +1,3 @@
-# This app requires the Streamlit library to run.
-# Make sure you install it with `pip install streamlit`
-
 import streamlit as st
 
 # Antibiotic info is now defined globally so the UI can access it
@@ -28,7 +25,49 @@ antibiotic_info = {
     "Fosfomycin": "Single-dose treatment for uncomplicated UTI in women. Dose: 3g PO once."
 }
 
-# The rest of the app's logic would go here, including:
-# - choose_antibiotic() function for decision logic
-# - Streamlit UI inputs for user data entry
-# - Displaying recommendations using st.success/st.expander, etc.
+# Import decision logic
+from choose_antibiotic import choose_antibiotic  # You should create this file or move logic here
+
+# Streamlit UI
+st.title("Smart Antibiotic Selector")
+
+age = st.number_input("Patient Age", min_value=0, max_value=120, value=30)
+microbe = st.selectbox("Identified Microbe", ["", *list({"Streptococcus pneumoniae", "Haemophilus influenzae", "E. coli", "MRSA", "Mycoplasma pneumoniae", "Pseudomonas aeruginosa"})])
+disease = st.selectbox("Disease", ["", *list({"pneumonia", "UTI", "meningitis", "otitis media", "cellulitis", "sepsis"})])
+symptoms = st.text_input("Symptoms (comma-separated)").split(',')
+contraindications = st.multiselect("Contraindicated Antibiotics", list(antibiotic_info.keys()))
+renal_function = st.selectbox("Renal Function", ["normal", "impaired", "dialysis"])
+liver_function = st.selectbox("Liver Function", ["normal", "impaired"])
+pregnancy = st.checkbox("Is the patient pregnant?")
+current_medications = st.text_input("Current Medications (comma-separated)").split(',')
+
+st.subheader("Local Antibiogram (Optional)")
+antibiogram_input = st.text_area("Format: microbe,antibiotic1:%,antibiotic2:%")
+local_antibiogram = {}
+if antibiogram_input:
+    for line in antibiogram_input.strip().split('\n'):
+        parts = line.split(',')
+        bug = parts[0].strip()
+        local_antibiogram[bug] = {item.split(':')[0].strip(): int(item.split(':')[1].strip()) for item in parts[1:]}
+
+st.subheader("Clinical Scoring")
+scores = {
+    "CURB-65": st.slider("CURB-65 Score (for pneumonia)", 0, 5, 0),
+    "Centor": st.slider("Centor Score (for pharyngitis)", 0, 4, 0),
+    "SOFA": st.slider("SOFA Score (for sepsis)", 0, 24, 0)
+}
+
+if st.button("Get Recommendation"):
+    result_text, recommended_abx = choose_antibiotic(
+        age, microbe, symptoms, disease, contraindications,
+        renal_function, liver_function, pregnancy,
+        current_medications, local_antibiogram, scores
+    )
+    st.success(result_text)
+    st.markdown("---")
+    st.subheader("Antibiotic Info")
+    for abx in recommended_abx:
+        abx = abx.strip(" []'\n")
+        if abx in antibiotic_info:
+            with st.expander(f"{abx}"):
+                st.markdown(antibiotic_info[abx])
