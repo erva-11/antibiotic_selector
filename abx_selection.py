@@ -33,7 +33,7 @@ st.title("Smart Antibiotic Selector")
 
 age = st.number_input("Patient Age", min_value=0, max_value=120, value=30)
 microbe = st.selectbox("Identified Microbe", ["", *list({"Streptococcus pneumoniae", "Haemophilus influenzae", "E. coli", "MRSA", "Mycoplasma pneumoniae", "Pseudomonas aeruginosa"})])
-disease = st.selectbox("Disease", ["", *list({"pneumonia", "UTI", "meningitis", "otitis media", "cellulitis", "sepsis"})])
+disease = st.selectbox("Disease", ["", *list({"pneumonia", "UTI", "meningitis", "otitis media", "cellulitis", "sepsis", "tonsillitis", "pharyngitis"})])
 symptoms = st.text_input("Symptoms (comma-separated)").split(',')
 contraindications = st.multiselect("Contraindicated Antibiotics", list(antibiotic_info.keys()))
 renal_function = st.selectbox("Renal Function", ["normal", "impaired", "dialysis"])
